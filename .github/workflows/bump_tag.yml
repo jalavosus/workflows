@@ -55,6 +55,6 @@ jobs:
       - name: Bump version and push tag
         uses: anothrNick/github-tag-action@1.36.0
         env:
-          GITHUB_TOKEN: ${{ secrets.token }}
-          WITH_V: true
-          RELEASE_BRANCHES: "master"
+          GITHUB_TOKEN:     ${{ secrets.token }}
+          WITH_V:           ${{ inputs.with_v }}
+          RELEASE_BRANCHES: ${{ inputs.release_branches }}
