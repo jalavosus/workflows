@@ -1,4 +1,4 @@
-name: Test
+name: Test (Go <1.18-incompatible)
 
 on:
   workflow_call:
@@ -41,7 +41,6 @@ jobs:
     strategy:
       matrix:
         go-version:
-          - 1.17.x
           - 1.18.x
         platform:
           - ubuntu-latest

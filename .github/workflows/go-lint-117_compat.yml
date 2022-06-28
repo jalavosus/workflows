@@ -1,4 +1,4 @@
-name: Lint (Go <1.18-incompatible)
+name: Lint (Go <1.18 compatible code)
 
 on:
   workflow_call:
@@ -35,6 +35,7 @@ jobs:
     strategy:
       matrix:
         go-version:
+          - 1.17.x
           - 1.18.x
         platform:
           - ubuntu-latest
