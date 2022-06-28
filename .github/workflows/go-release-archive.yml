@@ -8,11 +8,7 @@ on:
         type: string
       archive_files:
         type: string
-        default: |
-          *.go
-          go.mod
-          go.sum
-          LICENSE
+        default: "*.go go.mod go.sum LICENSE"
         description: "List of files"
         required: false
     secrets:
