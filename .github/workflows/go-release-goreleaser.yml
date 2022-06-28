@@ -36,9 +36,9 @@ jobs:
           HAS_PASS=0
           USE_GPG=0
 
-          if [[ -n ${{ secrets.gpg_secret_key }} ]]; then HAS_KEY=1; fi
-          if [[ -n ${{ secrets.gpg_password }} ]]; then HAS_PASS=1; fi
-          if [[ $HAS_KEY -eq 1 && $HAS_PASS -eq 1]]; then USE_GPG=1; fi
+          if [[ -n "${{ secrets.gpg_secret_key }}" ]]; then HAS_KEY=1; fi
+          if [[ -n "${{ secrets.gpg_password }}" ]]; then HAS_PASS=1; fi
+          if [[ $HAS_KEY -eq 1 ]] && [[ $HAS_PASS -eq 1 ]]; then USE_GPG=1; fi
 
           echo ::set-output name=use_gpg::${USE_GPG}
 
@@ -51,10 +51,10 @@ jobs:
 
       - id: gpg_fingerprint
         env:
-          USE_GPG: ${{ steps.import_gpg.outputs.use_gpg }}
+          USE_GPG: ${{ steps.use_gpg.outputs.use_gpg }}
         run: |
           FINGERPRINT=""
-          if [[ $USE_GPG -eq 1 ]]; then FINGERPRINT=${{ steps.use_gpg.outputs.fingerprint }}; fi
+          if [[ $USE_GPG -eq 1 ]]; then FINGERPRINT=${{ steps.import_gpg.outputs.fingerprint }}; fi
 
           echo ::set-output name=fingerprint::${FINGERPRINT}
 
