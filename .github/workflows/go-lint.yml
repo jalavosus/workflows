@@ -3,7 +3,7 @@ name: Lint
 on:
   workflow_call:
     secrets:
-      github_token:
+      token:
         required: true
 
 jobs:
@@ -53,4 +53,4 @@ jobs:
           version:      v1.46.2
           skip-cache:   true
         env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
+          GITHUB_TOKEN: ${{ secrets.token }}
