@@ -32,21 +32,30 @@ jobs:
 
       - id: use_gpg
         run: |
-          HAS_KEY=$([ -n ${{ secrets.gpg_secret_key }} ] && echo 1 || echo 0)
-          HAS_PASS=$([ -n ${{ secrets.gpg_password }} ] && echo 1 || echo 0
-          USE_GPG=$([ $HAS_KEY -eq 1 && $HAS_PASS -eq 1] && echo "y" || echo "n")
+          HAS_KEY=0
+          HAS_PASS=0
+          USE_GPG=0
+
+          if [[ -n ${{ secrets.gpg_secret_key }} ]]; then HAS_KEY=1; fi
+          if [[ -n ${{ secrets.gpg_password }} ]]; then HAS_PASS=1; fi
+          if [[ $HAS_KEY -eq 1 && $HAS_PASS -eq 1]]; then USE_GPG=1; fi
+
           echo ::set-output name=use_gpg::${USE_GPG}
 
       - id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v4
-        if: ${{ steps.use_gpg.outputs.use_gpg == "y" }}
+        if: ${{ steps.use_gpg.outputs.use_gpg == 1 }}
         with:
           gpg_private_key: ${{ secrets.gpg_secret_key }}
           passphrase:      ${{ secrets.gpg_password }}
 
       - id: gpg_fingerprint
+        env:
+          USE_GPG: ${{ steps.import_gpg.outputs.use_gpg }}
         run: |
-          FINGERPRINT=$([ ${{ steps.use_gpg.outputs.use_gpg }} = "y" ] && ${{ steps.import_gpg.outputs.fingerprint }} || "" })
+          FINGERPRINT=""
+          if [[ $USE_GPG -eq 1 ]]; then FINGERPRINT=${{ steps.use_gpg.outputs.fingerprint }}; fi
+
           echo ::set-output name=fingerprint::${FINGERPRINT}
 
       - uses: actions/setup-go@v3
