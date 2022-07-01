@@ -1,0 +1,71 @@
+name: "Release (GoReleaser)"
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        type:        string
+        required:    false
+        default:     "1.18.x"
+        description: "Version of go to build with"
+      goreleaser-version:
+        type:        string
+        required:    false
+        default:     "latest"
+        description: "Goreleaser binary version"
+
+    secrets:
+      gpg-secret-key:
+        required:    false
+        description: "GPG Private Key for release signing"
+
+      gpg-password:
+        required:    false
+        description: "Passphrase/password for GPG Private Key (if provided)"
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - id:  use_gpg
+        run: echo ::set-output name=use_gpg::$(([[ -n "${{ secrets.gpg-secret-key }}" ]] && [[ -n "${{ secrets.gpg-password }}" ]]) && echo 'true' || echo 'false')
+
+      - id:   import_gpg
+        if:   steps.use_gpg.outputs.use_gpg
+        uses: crazy-max/ghaction-import-gpg@v4
+        with:
+          gpg_private_key: ${{ secrets.gpg-secret-key }}
+          passphrase:      ${{ secrets.gpg-password }}
+
+      - id: gpg_fingerprint
+        env:
+          USE_GPG: ${{ steps.use_gpg.outputs.use_gpg }}
+        run: echo ::set-output name=fingerprint::$([[ $USE_GPG = 'true' ]] && echo "${{ steps.import_gpg.outputs.fingerprint }}" || echo "")
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: ${{ inputs.go-version }}
+
+      - uses: actions/cache@v3
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go${{ inputs.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go${{ inputs.go-version }}-
+
+      - run: go mod download
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3.0.0
+        with:
+          version: ${{ inputs.goreleaser-version }}
+          args: release --rm-dist
+        env:
+          GITHUB_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
+          GPG_FINGERPRINT: ${{ steps.gpg_fingerprint.outputs.fingerprint }}

@@ -1,21 +1,24 @@
-name: Bump Tag
+name: Bump Tag Version
 
 on:
   workflow_call:
     inputs:
       release_branches:
-        type: string
-        default: "master"
-        description: "Release branches"
-        required: false
+        type:        string
+        required:    false
+        default:     "master"
+        description: "Release branch(es)"
+
       with_v:
-        type: boolean
-        default: true
+        type:        boolean
+        required:    false
+        default:     true
         description: "Append v prefix to version"
-        required: false
+
     secrets:
       token:
-        required: true
+        required:    true
+        description: "GitHub token for triggering workflows on new tag push"
 
 jobs:
   prebuild:
@@ -37,7 +40,6 @@ jobs:
     outputs:
       commit_msg: $( [ -z "${{ steps.pull_commit_msg.outputs.pull_msg }}" ] && echo "${{ steps.push_commit_msg.outputs.push_msg }}" || echo "${{ steps.pull_commit_msg.outputs.pull_msg }}" )
 
-
   bump_tag:
     runs-on: ubuntu-latest
 
@@ -47,12 +49,11 @@ jobs:
     if: ${{ contains(needs.prebuild.outputs.commit_msg, '[ci release]') }}
 
     steps:
-      - name: Git Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Bump version and push tag
+      - name: Bump version/Push new tag
         uses: anothrNick/github-tag-action@1.36.0
         env:
           GITHUB_TOKEN:     ${{ secrets.token }}

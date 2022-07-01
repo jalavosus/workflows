@@ -1,0 +1,72 @@
+name: "Release (Archive)"
+
+on:
+  workflow_call:
+    inputs:
+      package-name:
+        required: true
+        type:     string
+
+      archive-files:
+        type:        string
+        required:    false
+        default:     "*.go go.mod go.sum LICENSE"
+        description: "List of files"
+
+      prerelease:
+        type:        boolean
+        required:    false
+        default:     false
+        description: "Is this a prerelease version?"
+
+    secrets:
+      gpg-secret-key:
+        required:    false
+        description: "GPG Private Key for release signing"
+
+      gpg-password:
+        required:    false
+        description: "Passphrase/password for GPG Private Key (if provided)"
+
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - id:  git_tag
+        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+
+      - id:  tarball_file
+        run: echo ::set-output name=filename::"${{ inputs.package-name }}_${{ steps.git_tag.outputs.tag }}.tar.gz"
+
+      - id:  use_gpg
+        run: echo ::set-output name=use_gpg::$(([[ -n "${{ secrets.gpg-secret-key }}" ]] && [[ -n "${{ secrets.gpg-password }}" ]]) && echo 'true' || echo 'false')
+
+      - id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v4
+        if: ${{ steps.use_gpg.outputs.use_gpg }}
+        with:
+          gpg_private_key: ${{ secrets.gpg-secret-key }}
+          passphrase:      ${{ secrets.gpg-password }}
+
+      - name: Build dist tarball
+        run: tar -czvf ${{ steps.tarball_file.outputs.filename }} ${{ inputs.archive-files }}
+
+      - name: GPG sign dist tarball
+        if: ${{ steps.use_gpg.outputs.use_gpg }}
+        run: gpg --armor --detach-sign ${{ steps.tarball_file.outputs.filename }}
+
+      - name: Create and publish GitHub release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: ${{ inputs.prerelease }}
+          files: |
+            LICENSE
+            README.md
+            ${{ steps.tarball_file.outputs.filename }}*
