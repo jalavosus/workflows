@@ -6,7 +6,7 @@ on:
       go-version:
         type:        string
         required:    false
-        default:     "1.18.x"
+        default:     "1.19.x"
         description: "Version of go to build with"
       goreleaser-version:
         type:        string
