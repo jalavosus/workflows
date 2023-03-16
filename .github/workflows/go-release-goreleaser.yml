@@ -48,7 +48,7 @@ jobs:
           USE_GPG: ${{ steps.use_gpg.outputs.use_gpg }}
         run: echo ::set-output name=fingerprint::$([[ $USE_GPG = 'true' ]] && echo "${{ steps.import_gpg.outputs.fingerprint }}" || echo "")
 
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: ${{ inputs.go-version }}
 
