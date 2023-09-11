@@ -48,7 +48,7 @@ jobs:
         run: echo ::set-output name=use_gpg::$(([[ -n "${{ secrets.gpg-secret-key }}" ]] && [[ -n "${{ secrets.gpg-password }}" ]]) && echo 'true' || echo 'false')
 
       - id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v4
+        uses: crazy-max/ghaction-import-gpg@v6
         if: ${{ steps.use_gpg.outputs.use_gpg }}
         with:
           gpg_private_key: ${{ secrets.gpg-secret-key }}
